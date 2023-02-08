@@ -1,10 +1,7 @@
 ### GPT3 Setup ###
 import openai
 
-# Set up the OpenAI API client
-openai.api_key = "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"
-
-# Set up the model and prompt
+openai.api_key = "YOUR_KEY_HERE"
 model_engine = "text-davinci-003"
 
 def gpt3(prompt):
@@ -45,22 +42,6 @@ SAT_prompt = "In this task, we have some number of variables labeled x_1, x_2, t
 # expr is list of triplets of tuples (n, x) where n is a Boolean (n is True if the term is negated) and x is a variable index
 # assign is a list of Booleans where x_i=>assign[i]
 def gpt_3SAT_eval(expr, assign):
-    def expr_to_str(expr):
-        expr_str = ""
-        for clause in expr:
-            expr_str += "("
-            for var in clause:
-                expr_str += ("-" if var[0] else "") + "x_" + str(var[1])
-                expr_str += " OR " if var != clause[-1] else ""
-            expr_str += ") AND " if clause != expr[-1] else ")"
-        return expr_str
-
-    def assign_to_str(assign):
-        return "(" + \
-               str(["x_%d=>%s" % (i + 1, str(assign[i]).upper()) for i in range(len(assign))]).replace("[", "").replace(
-                   "]", "").replace("'", "") + \
-               ")"
-
     expr_str = expr_to_str(expr)
     assign_str = assign_to_str(assign)
 
@@ -72,7 +53,38 @@ def gpt_3SAT_eval(expr, assign):
     elif last == "FALSE.":
         return False
     else:
-        return response
+        raise Exception("GPT's response did not end in TRUE or FALSE. Here is what it output instead. \n" + response)
+
+def expr_to_str(expr):
+    expr_str = ""
+    for clause in expr:
+        expr_str += "("
+        for var in clause:
+            expr_str += ("-" if var[0] else "") + "x_" + str(var[1])
+            expr_str += " OR " if var != clause[-1] else ""
+        expr_str += ") AND " if clause != expr[-1] else ")"
+    return expr_str
+def assign_to_str(assign):
+    return "(" + \
+            str(["x_%d=>%s" % (i + 1, str(assign[i]).upper()) for i in range(len(assign))]).replace("[", "").replace(
+                "]", "").replace("'", "") + \
+            ")"
+
+def gpt_3SAT_test(expr, assign):
+    gpt_ans = gpt_3SAT_eval(expr, assign)
+    real_ans = all([evaluate(clause) for clause in expr])
+
+    expr_str, assign_str = expr_to_str(expr), assign_to_str(assign)
+
+    if gpt_ans == real_ans:
+        print("GPT3 correctly evaluated expression %s under assignment %s as %s." % (expr_str, assign_str, str(gpt_ans).upper()))
+    else:
+        raise Exception("GPT3 INCORRECTLY evaluated expression %s under assignment %s as %s." % (expr_str, assign_str, str(gpt_ans).upper()))
+
+def evaluate(clause, assign):
+    t1, t2, t3 = clause
+    return (t1[0] != assign[t1[1]-1]) or (t2[0] != assign[t2[1]-1]) or (t3[0] != assign[t3[1]-1])
+
 
 expressions = [
     [((False, 1), (False, 2), (False, 3))], # (x_1 OR x_2 OR x_3)
@@ -83,4 +95,4 @@ expressions = [
 for i in [True, False]:
     for j in [True, False]:
         for k in [True, False]:
-            print(gpt_3SAT_eval([((False, 1), (False, 2), (False, 3))], [i, j, k])) # Tests program on (x_1 OR x_2 OR x_3) for all truth assignments
+            gpt_3SAT_test([((False, 1), (False, 2), (False, 3))], [i, j, k]) # Tests program on (x_1 OR x_2 OR x_3) for all truth assignments
