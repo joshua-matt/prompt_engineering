@@ -1,7 +1,7 @@
 ### GPT3 Setup ###
 import openai
 
-openai.api_key = "YOUR_KEY_HERE"
+openai.api_key = "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"
 model_engine = "text-davinci-003"
 
 def gpt3(prompt):
@@ -49,9 +49,9 @@ def gpt_3SAT_eval(expr, assign):
     last = response.split(" ")[-1]
 
     if  last == "TRUE.":
-        return True
+        return True, response
     elif last == "FALSE.":
-        return False
+        return False, response
     else:
         raise Exception("GPT's response did not end in TRUE or FALSE. Here is what it output instead. \n" + response)
 
@@ -72,14 +72,16 @@ def assign_to_str(assign):
 
 def gpt_3SAT_test(expr, assign):
     gpt_ans = gpt_3SAT_eval(expr, assign)
-    real_ans = all([evaluate(clause) for clause in expr])
+    real_ans = all([evaluate(clause, assign) for clause in expr])
+
 
     expr_str, assign_str = expr_to_str(expr), assign_to_str(assign)
 
-    if gpt_ans == real_ans:
-        print("GPT3 correctly evaluated expression %s under assignment %s as %s." % (expr_str, assign_str, str(gpt_ans).upper()))
+    if gpt_ans[0] == real_ans:
+        print("GPT3 correctly evaluated expression %s under assignment %s as %s." % (expr_str, assign_str, str(gpt_ans[0]).upper()))
+        return
     else:
-        raise Exception("GPT3 INCORRECTLY evaluated expression %s under assignment %s as %s." % (expr_str, assign_str, str(gpt_ans).upper()))
+        raise Exception("GPT3 INCORRECTLY evaluated expression %s under assignment %s as %s. Here was its reasoning.\n%s" % (expr_str, assign_str, str(gpt_ans[0]).upper(), gpt_ans[1]))
 
 def evaluate(clause, assign):
     t1, t2, t3 = clause
@@ -87,12 +89,19 @@ def evaluate(clause, assign):
 
 
 expressions = [
-    [((False, 1), (False, 2), (False, 3))], # (x_1 OR x_2 OR x_3)
+    [((False, 1), (False, 2), (False, 3)),], # (x_1 OR x_2 OR x_3)
     [((False, 1), (False, 2), (False, 3)), ((True, 1), (True, 2), (True, 3))], # (x_1 OR x_2 OR x_3) AND (-x_1 OR -x_2 OR -x_3)
-    [((False, 1), (True, 2), (False, 3)), ((True, 1), (False, 2), (True, 3))] # (x_1 OR -x_2 OR x_3) AND (-x_1 OR x_2 OR -x_3)
+    [((False, 1), (True, 2), (False, 3)), ((True, 1), (False, 2), (True, 3))], # (x_1 OR -x_2 OR x_3) AND (-x_1 OR x_2 OR -x_3)
+    [((False, 1), (False, 2), (False, 3)), ((True, 1), (False, 2), (False, 4)), ((True, 2), (False, 3), (True, 4))] # (x_1 OR x_2 OR x_3) AND (-x_1 OR x_2 OR x_4) AND (-x_2 OR x_3 OR -x_4)
                ]
 
-for i in [True, False]:
+for i in [True, False]: # 3 variables
     for j in [True, False]:
         for k in [True, False]:
-            gpt_3SAT_test([((False, 1), (False, 2), (False, 3))], [i, j, k]) # Tests program on (x_1 OR x_2 OR x_3) for all truth assignments
+            gpt_3SAT_test(expressions[-1], [i, j, k]) # Tests program on (x_1 OR x_2 OR x_3) for all truth assignments
+
+"""for i in [True, False]: # 4 variables
+    for j in [True, False]:
+        for k in [True, False]:
+            for l in [True, False]:
+                gpt_3SAT_test(expressions[-1], [i, j, k, l]) # Tests program on (x_1 OR x_2 OR x_3) AND (-x_1 OR x_2 OR x_4) AND (-x_2 OR x_3 OR -x_4) for all truth assignments"""
