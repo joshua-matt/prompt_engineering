@@ -98,7 +98,7 @@ expressions = [
 for i in [True, False]: # 3 variables
     for j in [True, False]:
         for k in [True, False]:
-            gpt_3SAT_test(expressions[-1], [i, j, k]) # Tests program on (x_1 OR x_2 OR x_3) for all truth assignments
+            gpt_3SAT_test(expressions[0], [i, j, k]) # Tests program on (x_1 OR x_2 OR x_3) for all truth assignments
 
 """for i in [True, False]: # 4 variables
     for j in [True, False]:
