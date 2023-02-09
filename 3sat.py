@@ -1,7 +1,7 @@
 ### GPT3 Setup ###
 import openai
 
-openai.api_key = "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"
+openai.api_key = "YOUR_KEY_HERE"
 model_engine = "text-davinci-003"
 
 def gpt3(prompt):
